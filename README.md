@@ -50,6 +50,19 @@ You are responsible for the look, feel, and user experience. Your work lives exc
 
 - Handoff: You will fetch the final "Game State" from the backend/routes/ and use it to update the numbers and animations on the screen. You should not be writing game logic or webcam processing code here.
 
+🎨 Special Note for UI Developers: Tailwind CSS
+We are using Tailwind CSS for styling. If you are building components, follow these steps to ensure your styles actually show up:
+
+1. Verify Installation
+The first time you clone the repo, make sure you run this inside the frontend folder:
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+2. How to use it
+Instead of writing long CSS files, use "Utility Classes" directly in your HTML/JSX tags.
+
+Example: <div className="bg-blue-500 p-4 text-white rounded-lg">
+
+Refer to the Tailwind Documentation if you get stuck.
 
 
 *🤝 How to Integrate*
@@ -111,13 +124,20 @@ Terminal 2 (Frontend): cd frontend then npm run dev
 
 Open the link provided in Terminal 2 (usually http://localhost:5173) to play.
 
-#🛡️ GitHub Safety Rules
-To make sure the game stays playable at all times:
+# 🛡️ Team Workflow: Using Branches
+To prevent breaking the game for everyone, do not push directly to the main branch. Instead, everyone will work on their own "Branch" (a private copy of the code).
 
-Create a Branch: Before you start a task, create your own "workspace":
-git checkout -b [your-name]-[task-name] (Example: git checkout -b ahmad-ui-fix)
-
-Push to your Branch: When saving, use:
-git push origin [your-branch-name]
+1. Create your Branch (Do this for every new task)
+Before you start coding a new feature, open your terminal and type:
+- Get the latest code first
+git pull origin main
+- Create and switch to your new branch
+Name it like: name/task (e.g., ahmad/morse-logic or sara/ui-score)
+git checkout -b your-name/task-name
+2. Save & Push your Branch
+As you work, save your progress to GitHub so the team can see it:
+- git add .
+- git commit -m "Explain what you did here"
+- git push origin your-name/task-name
 
 The Merge: Once your feature is working perfectly, tell the Team Lead. We will merge your branch into the main code together.

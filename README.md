@@ -1,26 +1,24 @@
 # face-to-morse-game
-Gemini said
-This picture helps perfectly! You have a classic, clean full-stack setup with a distinct backend and frontend. Knowing that you are using what looks like React (with Vite) for the frontend and Node.js for the backend makes organizing the team's workflow much easier.
 
-Since you are leading this 5-person team for the tech event, you can use this exact folder structure to enforce that simple 3-step pipeline (AI -> Logic -> UI).
 
-Here is a customized README tailored exactly to your screenshot that explains where everyone should work:
 
-🕹️ Face-to-Morse Game: Code & Architecture Guide
+*🕹️ Face-to-Morse Game: Code & Architecture Guide*
 Welcome to the repository! To keep our 5-person team moving quickly for the tech event without stepping on each other's toes, we are using a strict separation of concerns.
 
 This document explains our pipeline and exactly which folders you should be working in.
 
-🔄 The 3-Step Game Pipeline
+*🔄 The 3-Step Game Pipeline*
 Our game relies on a simple, one-way data flow:
 
-AI & Input: Captures the webcam, tracks the face, and detects a Morse code signal (e.g., a blink = dot).
+- AI & Input: Captures the webcam, tracks the face, and detects a Morse code signal (e.g., a blink = dot).
 
-Game Logic: Takes that Morse signal, checks if it's correct according to the game rules, and updates the score/timer.
+- Game Logic: Takes that Morse signal, checks if it's correct according to the game rules, and updates the score/timer.
 
-Frontend / UI: Takes the updated score/timer and renders it nicely on the screen.
+- Frontend / UI: Takes the updated score/timer and renders it nicely on the screen.
 
-📁 Where You Should Work (Folder Structure)
+
+
+*📁 Where You Should Work (Folder Structure)*
 Do not edit files outside your designated areas without talking to the rest of the team first!
 
 1. 🧠 AI Developer (Input Handling)
@@ -52,7 +50,9 @@ Your Goal: Build the main menus, the game screen, and the scoreboards using Reac
 
 Handoff: You will fetch the final "Game State" from the backend/routes/ and use it to update the numbers and animations on the screen. You should not be writing game logic or webcam processing code here.
 
-🤝 How to Integrate
+
+
+*🤝 How to Integrate*
 When putting the pieces together:
 
 The AI scripts in frontend/utils will trigger an API call to the backend.

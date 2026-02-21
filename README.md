@@ -101,3 +101,23 @@ Step 3: Install the Frontend (UI & AI)
 - Type cd frontend and press Enter to move into the frontend folder.
 
 - Type npm install and press Enter. Wait for it to finish.
+
+# ▶️ How to Run the Game
+You must run two terminals at once:
+
+Terminal 1 (Backend): cd backend then node index.js
+
+Terminal 2 (Frontend): cd frontend then npm run dev
+
+Open the link provided in Terminal 2 (usually http://localhost:5173) to play.
+
+#🛡️ GitHub Safety Rules
+To make sure the game stays playable at all times:
+
+Create a Branch: Before you start a task, create your own "workspace":
+git checkout -b [your-name]-[task-name] (Example: git checkout -b ahmad-ui-fix)
+
+Push to your Branch: When saving, use:
+git push origin [your-branch-name]
+
+The Merge: Once your feature is working perfectly, tell the Team Lead. We will merge your branch into the main code together.

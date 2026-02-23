@@ -35,9 +35,9 @@ You are the brain of the game. Your code lives entirely in the backend folder. Y
 
 - Work in: * backend/controllers/: Write the actual game rules here (e.g., checking if the morse code matches the target word, updating points).
 
-backend/routes/: Set up the API endpoints that the Frontend will call to send you the AI's Morse signals.
+- backend/routes/: Set up the API endpoints that the Frontend will call to send you the AI's Morse signals.
 
-backend/models/: Define how the game state is structured (e.g., current score, time left).
+- backend/models/: Define how the game state is structured (e.g., current score, time left).
 
 - Handoff: You will process the incoming data and send back a "Game State" object to the Frontend.
 
@@ -101,6 +101,18 @@ Step 3: Install the Frontend (UI & AI)
 - Type cd frontend and press Enter to move into the frontend folder.
 
 - Type npm install and press Enter. Wait for it to finish.
+- 🎨 Special Note for UI Developers: Tailwind CSS
+We are using Tailwind CSS for styling. If you are building components, follow these steps to ensure your styles actually show up:
+1. Verify Installation
+The first time you clone the repo, make sure you run this inside the frontend folder:
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+2. How to use it
+Instead of writing long CSS files, use "Utility Classes" directly in your HTML/JSX tags.
+
+Example: in the current welcome code
+
+Refer to the Tailwind Documentation if you get stuck.
 
 # ▶️ How to Run the Game
 You must run two terminals at once:
@@ -111,7 +123,7 @@ Terminal 2 (Frontend): cd frontend then npm run dev
 
 Open the link provided in Terminal 2 (usually http://localhost:5173) to play.
 
-#🛡️ GitHub Safety Rules
+# 🛡️ GitHub Safety Rules
 To make sure the game stays playable at all times:
 
 Create a Branch: Before you start a task, create your own "workspace":

@@ -45,7 +45,9 @@ You are the brain of the game. Your code lives entirely in the backend folder. Y
 You are responsible for the look, feel, and user experience. Your work lives exclusively in the frontend folder.
 
 - Work in: frontend/src/components/, frontend/src/pages/, and frontend/src/assets/
-
+- use Tailwind CSS
+Example: in the current welcome code
+Refer to the Tailwind Documentation if you get stuck.
 - Your Goal: Build the main menus, the game screen, and the scoreboards using React.
 
 - Handoff: You will fetch the final "Game State" from the backend/routes/ and use it to update the numbers and animations on the screen. You should not be writing game logic or webcam processing code here.
@@ -101,18 +103,7 @@ Step 3: Install the Frontend (UI & AI)
 - Type cd frontend and press Enter to move into the frontend folder.
 
 - Type npm install and press Enter. Wait for it to finish.
-- 🎨 Special Note for UI Developers: Tailwind CSS
-We are using Tailwind CSS for styling. If you are building components, follow these steps to ensure your styles actually show up:
-1. Verify Installation
-The first time you clone the repo, make sure you run this inside the frontend folder:
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-2. How to use it
-Instead of writing long CSS files, use "Utility Classes" directly in your HTML/JSX tags.
 
-Example: in the current welcome code
-
-Refer to the Tailwind Documentation if you get stuck.
 
 # ▶️ How to Run the Game
 You must run two terminals at once:
@@ -123,13 +114,21 @@ Terminal 2 (Frontend): cd frontend then npm run dev
 
 Open the link provided in Terminal 2 (usually http://localhost:5173) to play.
 
-# 🛡️ GitHub Safety Rules
+# 🛡️ GitHub Safety Rules and how to push
 To make sure the game stays playable at all times:
 
-Create a Branch: Before you start a task, create your own "workspace":
+- Create a Branch: Before you start a task, create your own "workspace":
 git checkout -b [your-name]-[task-name] (Example: git checkout -b ahmad-ui-fix)
 
-Push to your Branch: When saving, use:
-git push origin [your-branch-name]
+- How to Save and Push 
+When you finish a task, run these commands in your terminal:
+1. Stage your changes (Tell Git which files you want to save):
+- git add .
+2. Commit your work (Give your save point a name):
+- git commit -m "added morse detection logic" 
+(Make sure your message describes exactly what you changed!)
+3. Push to GitHub (Send your code to the cloud):
+- git push -u origin [your-branch-name]
 
+  
 The Merge: Once your feature is working perfectly, tell the Team Lead. We will merge your branch into the main code together.

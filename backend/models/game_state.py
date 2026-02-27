@@ -25,7 +25,7 @@ class GameState:
     def start_game(self):
         self.score = 0
         self.level = 1
-        self.start_game = time.time()
+        self.start_time = time.time()
         self.is_active = True
         self.current_sequence = ""
         self.pick_new_word()
@@ -39,7 +39,7 @@ class GameState:
 
     def get_time_left(self):
         elapsed_time = time.time() - self.start_time
-        remaining_time = max(0, elapsed_time - self.time_limit)
+        remaining_time = max(0, int(self.time_limit - elapsed_time))
 
         if remaining_time == 0 and self.is_active:
             self.end_game()
@@ -72,7 +72,7 @@ class GameState:
                 # word completed
                 self.score += 10
                 self.level += 1  
-                self._pick_new_word()
+                self.pick_new_word()
                 
         
         elif not expected_morse.startswith(self.current_sequence):

@@ -47,8 +47,37 @@ class GameState:
         return remaining_time
 
         
-    def check_match():
-        pass
+    def check_match(self):
+        """I thought of having a scoring ssytem
+        letter-correct guess: +2 points
+        letter-wrong guess: -1 points
+        whole word correct guess = +10 points
+        
+        """
+        expected_morse = MORSE_DICT.get(self.target_letter, "")
+        
+        
+        if self.current_sequence == expected_morse:
+            # if they get correct match
+            self.current_sequence = ""
+            self.target_word_index += 1
+            self.score += 2
+            
+            # check if target word is finished
+            if self.target_word_index < len(self.target_word):
+                
+                self.target_letter = self.target_word[self.target_word_index]
+            
+            else:
+                # word completed
+                self.score += 10
+                self.level += 1  
+                self._pick_new_word()
+                
+        
+        elif not expected_morse.startswith(self.current_sequence):
+            self.current_sequence = ""
+            self.score = max(0, self.score - 1)
 
 
     def add_signal(self, signal):

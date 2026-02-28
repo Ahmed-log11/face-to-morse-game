@@ -1,0 +1,18 @@
+# Root node_modules
+node_modules/
+
+# Any nested node_modules (backend/frontend)
+**/node_modules/
+
+# Logs
+*.log
+
+# Env files
+.env
+
+# Mac files
+.DS_Store
+
+# Build outputs
+dist/
+build/

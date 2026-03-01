@@ -104,3 +104,6 @@ class GameState:
             "targetLetter": self.target_letter,
             "currentSequence": self.current_sequence
         }
+    
+
+game_state = GameState()

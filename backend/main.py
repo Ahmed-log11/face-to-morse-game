@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from models.game_state import game_state
+from pydantic import BaseModel
 
 app = FastAPI(title="Face to Morse")
 
@@ -13,6 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
     allow_methods=["*"]
 )
+
+
+# pydantic class
+class SignalRequest(BaseModel):
+    signal: str
 
 
 @app.get("/start-game")
@@ -34,8 +40,9 @@ def get_state():
 
 
 @app.post("/add-signal")
-def add_signal(signal: str):
+def add_signal(request: SignalRequest):
     """To be used by AI team to send detected signals to be added to
     the game state dictionray 
     """
-    game_state.add_signal(signal=signal)
+    game_state.add_signal(signal=request.signal)
+    return {"message": "signal added", "signal": request.signal}

@@ -1,0 +1,272 @@
+"""
+Advanced Blink Detector (Experimental)
+
+Author: Malath
+
+Purpose
+-------
+This file contains an improved version of the blink detection algorithm used
+for converting eye blinks into Morse code signals (DOT / DASH).
+
+Why this file exists
+--------------------
+The original blink_detector.py works, but it sometimes produces false positives.
+For example:
+- Looking down can be mistaken as closing the eyes
+- Single noisy frames can trigger accidental blinks
+
+Improvements in this version
+----------------------------
+This version adds several reliability improvements:
+
+1. Automatic calibration
+   - The detector learns the user's normal eye openness during the first seconds.
+
+2. Smoothing (EMA filter)
+   - Reduces noise from small landmark fluctuations.
+
+3. Hysteresis thresholds
+   - Uses different thresholds for closing and reopening the eye.
+
+4. Multi-frame confirmation
+   - Eyes must remain closed for several frames before counting as a blink.
+
+5. Head pitch guard
+   - If the user looks down too much, blink detection is ignored.
+
+Current Status
+--------------
+This file is experimental and does NOT replace blink_detector.py yet.
+It can be tested locally and integrated later if the team decides it is more stable.
+
+Integration
+-----------
+To use this detector instead of the original one, update:
+
+backend/ai/morse_detector.py
+
+Example:
+    from ai.blink_detector_v2 import BlinkDetector
+
+instead of:
+    from ai.blink_detector import BlinkDetector
+"""
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from typing import Optional, List, Dict
+
+import numpy as np
+
+# Eye landmarks (FaceMesh)
+LEFT_EYE = [33, 160, 158, 133, 153, 144]
+RIGHT_EYE = [362, 385, 387, 263, 373, 380]
+
+# Head landmarks (rough pitch estimation)
+FOREHEAD = 10
+NOSE_TIP = 1
+CHIN = 152
+
+
+def _dist(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.linalg.norm(a - b))
+
+
+def eye_aspect_ratio(pts: np.ndarray, eye_idx: List[int]) -> float:
+    """
+    EAR = (||p2-p6|| + ||p3-p5||) / (2*||p1-p4||)
+    """
+    p1, p2, p3, p4, p5, p6 = [pts[i] for i in eye_idx]
+    num = _dist(p2, p6) + _dist(p3, p5)
+    den = 2.0 * _dist(p1, p4)
+    if den <= 1e-6:
+        return 0.0
+    return num / den
+
+
+@dataclass
+class BlinkConfig:
+    # Calibration
+    calibrate_seconds: float = 1.5          # learn open-eye baseline EAR
+    baseline_min: float = 0.18              # sanity bounds
+    baseline_max: float = 0.40
+
+    # Thresholds relative to baseline
+    close_ratio: float = 0.65               # EAR < baseline * close_ratio => closing
+    open_ratio: float = 0.78                # EAR > baseline * open_ratio  => reopening (hysteresis)
+
+    # Stability
+    ema_alpha: float = 0.35                 # smoothing (0..1); higher = less smoothing
+    closed_frames_required: int = 3         # must be closed for N consecutive frames
+    cooldown_ms: int = 350                  # prevent double-trigger
+
+    # Mapping
+    both_eyes_as_dash: bool = True
+
+    # Head pitch guard (looking down)
+    # We estimate pitch with ratios; if too "down", ignore blink detection.
+    max_down_pitch_ratio: float = 0.70      # lower = stricter (ignore more when looking down)
+
+
+class BlinkDetector:
+    """
+    Robust blink detector with:
+      - initial calibration (baseline EAR)
+      - EMA smoothing
+      - hysteresis thresholds
+      - consecutive-frame requirement
+      - head pitch guard
+    Emits: "DOT" or "DASH" or None
+    """
+    def __init__(self, config: BlinkConfig | None = None):
+        self.cfg = config or BlinkConfig()
+
+        self._t0 = time.time()
+        self._baseline_left: Optional[float] = None
+        self._baseline_right: Optional[float] = None
+        self._calib_samples_left: List[float] = []
+        self._calib_samples_right: List[float] = []
+
+        # EMA
+        self._ema_left: Optional[float] = None
+        self._ema_right: Optional[float] = None
+
+        # state machine
+        self._left_closed_frames = 0
+        self._right_closed_frames = 0
+        self._left_was_closed = False
+        self._right_was_closed = False
+
+        self._last_emit_time = 0.0
+
+    def _can_emit(self, now: float) -> bool:
+        return (now - self._last_emit_time) * 1000.0 >= self.cfg.cooldown_ms
+
+    def _pitch_ratio(self, pts: np.ndarray) -> float:
+        """
+        Rough “looking down” estimate:
+          ratio = distance(nose->chin) / distance(forehead->nose)
+        When looking down a lot, this ratio often changes noticeably.
+        We use it only as a guardrail, not a precise head pose.
+        """
+        fh = pts[FOREHEAD]
+        nose = pts[NOSE_TIP]
+        chin = pts[CHIN]
+        up = _dist(fh, nose)
+        down = _dist(nose, chin)
+        if up <= 1e-6:
+            return 1.0
+        return down / up
+
+    def _update_baselines(self, left: float, right: float) -> None:
+        self._calib_samples_left.append(left)
+        self._calib_samples_right.append(right)
+
+        # Use median to resist noise
+        bl = float(np.median(self._calib_samples_left))
+        br = float(np.median(self._calib_samples_right))
+
+        # Clamp to sane range
+        bl = max(self.cfg.baseline_min, min(self.cfg.baseline_max, bl))
+        br = max(self.cfg.baseline_min, min(self.cfg.baseline_max, br))
+
+        self._baseline_left = bl
+        self._baseline_right = br
+
+    def _apply_ema(self, prev: Optional[float], x: float) -> float:
+        if prev is None:
+            return x
+        a = self.cfg.ema_alpha
+        return a * x + (1.0 - a) * prev
+
+    def process_landmarks(self, pts_xy: np.ndarray) -> Optional[str]:
+        now = time.time()
+
+        # Head pitch guard: if looking down too much, skip detection this frame
+        pitch = self._pitch_ratio(pts_xy)
+        if pitch < self.cfg.max_down_pitch_ratio:
+            # Reset short-term closure counters so we don't “carry over” bad frames
+            self._left_closed_frames = 0
+            self._right_closed_frames = 0
+            self._left_was_closed = False
+            self._right_was_closed = False
+            return None
+
+        # Compute EAR
+        left_ear = eye_aspect_ratio(pts_xy, LEFT_EYE)
+        right_ear = eye_aspect_ratio(pts_xy, RIGHT_EYE)
+
+        # Calibration window: learn baselines for open eyes
+        if (now - self._t0) < self.cfg.calibrate_seconds:
+            # Only use reasonably open-looking samples to avoid calibrating while blinking
+            if left_ear > self.cfg.baseline_min and right_ear > self.cfg.baseline_min:
+                self._update_baselines(left_ear, right_ear)
+            return None
+
+        # If baselines never got set (rare), fall back to observed values
+        if self._baseline_left is None or self._baseline_right is None:
+            self._baseline_left = max(self.cfg.baseline_min, min(self.cfg.baseline_max, left_ear))
+            self._baseline_right = max(self.cfg.baseline_min, min(self.cfg.baseline_max, right_ear))
+
+        # EMA smoothing
+        self._ema_left = self._apply_ema(self._ema_left, left_ear)
+        self._ema_right = self._apply_ema(self._ema_right, right_ear)
+
+        bl = self._baseline_left
+        br = self._baseline_right
+
+        left_close_th = bl * self.cfg.close_ratio
+        left_open_th = bl * self.cfg.open_ratio
+        right_close_th = br * self.cfg.close_ratio
+        right_open_th = br * self.cfg.open_ratio
+
+        # Update closed frame counters using hysteresis
+        if self._ema_left < left_close_th:
+            self._left_closed_frames += 1
+        elif self._ema_left > left_open_th:
+            self._left_closed_frames = 0
+            self._left_was_closed = False  # ready for next blink
+
+        if self._ema_right < right_close_th:
+            self._right_closed_frames += 1
+        elif self._ema_right > right_open_th:
+            self._right_closed_frames = 0
+            self._right_was_closed = False
+
+        # Determine if each eye is "considered closed" now
+        left_closed = self._left_closed_frames >= self.cfg.closed_frames_required
+        right_closed = self._right_closed_frames >= self.cfg.closed_frames_required
+
+        # Detect blink event on closed->open transition
+        if not self._can_emit(now):
+            return None
+
+        # Mark when we first become “closed”
+        if left_closed:
+            self._left_was_closed = True
+        if right_closed:
+            self._right_was_closed = True
+
+        # Blink fires when we were closed and now reopened (via hysteresis reset above)
+        # We approximate “reopen” by checking current EMA above open threshold and prior closed flag.
+        left_reopened = self._left_was_closed and (self._ema_left > left_open_th)
+        right_reopened = self._right_was_closed and (self._ema_right > right_open_th)
+
+        if left_reopened and right_reopened and self.cfg.both_eyes_as_dash:
+            self._last_emit_time = now
+            self._left_was_closed = False
+            self._right_was_closed = False
+            return "DASH"
+
+        if left_reopened:
+            self._last_emit_time = now
+            self._left_was_closed = False
+            return "DOT"
+
+        if right_reopened:
+            self._last_emit_time = now
+            self._right_was_closed = False
+            return "DASH"
+
+        return None

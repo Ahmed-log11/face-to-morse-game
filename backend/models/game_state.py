@@ -38,6 +38,10 @@ class GameState:
         self.target_letter = self.target_word[self.target_word_index]
 
     def get_time_left(self):
+        # guard against calling this before the game starts
+        if self.start_time is None:
+            return 0
+
         elapsed_time = time.time() - self.start_time
         remaining_time = max(0, int(self.time_limit - elapsed_time))
 

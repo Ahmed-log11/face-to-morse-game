@@ -7,7 +7,7 @@ import numpy as np
 import mediapipe as mp
 
 from .frame_decode import decode_frame
-from .blink_detector import BlinkDetector, BlinkConfig
+from .blink_detector_v2 import BlinkDetector, BlinkConfig
 
 
 class MorseDetector:

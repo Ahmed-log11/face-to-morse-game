@@ -6,13 +6,6 @@ from typing import Optional, List
 
 import numpy as np
 
-"""
-Improved blink detector version.
-
-This version is more stable than the original one and reduces false positives
-caused by noise or looking down.
-"""
-
 LEFT_EYE = [33, 160, 158, 133, 153, 144]
 RIGHT_EYE = [362, 385, 387, 263, 373, 380]
 

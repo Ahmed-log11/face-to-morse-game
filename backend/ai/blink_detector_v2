@@ -1,9 +1,8 @@
+"""Blink detector V2 – improved stability and reduced false positives"""
 from __future__ import annotations
-
 import time
 from dataclasses import dataclass
 from typing import Optional, List
-
 import numpy as np
 
 LEFT_EYE = [33, 160, 158, 133, 153, 144]

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models.game_state import game_state
 from ai import MorseDetector
@@ -30,9 +30,8 @@ async def broadcast_state():
         return
     try:
         await active_connection.send_text(json.dumps(game_state.get_state_dict()))
-    except:
-        # connection probably dropped, the ws endpoint will clean it up
-        pass
+    except Exception:
+        active_connection = None
 
 
 # pydantic classes
@@ -70,7 +69,7 @@ async def add_signal(request: SignalRequest):
     """
     game_state.add_signal(signal=request.signal)
     await broadcast_state()
-    return {"message": "signal added", "signal": request.signal}
+    return {"message": "signal added", "signal": request.signal, "gameState": game_state.get_state_dict()}
 
 
 @app.post("/process-frame")
@@ -78,7 +77,10 @@ async def process_frame(request: FrameRequest):
     """To be used by frontend to send raw webcam frames
        the backend runs the AI and updates the game state automatically
     """
-    signal = detector.process(request.frame)
+    try:
+        signal = detector.process(request.frame)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
     
     if signal:
         game_state.add_signal(signal)
@@ -100,10 +102,12 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_text(json.dumps(game_state.get_state_dict()))
 
         while True:
-            # just keep the connection alive, we dont expect messages from the client
-            await websocket.receive_text()
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
 
     except WebSocketDisconnect:
-        active_connection = None
-    except:
-        active_connection = None
+        pass
+    finally:
+        if active_connection is websocket:
+            active_connection = None

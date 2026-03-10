@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from models.game_state import game_state
 from pydantic import BaseModel
+import json
 
 app = FastAPI(title="Face to Morse")
 
@@ -15,6 +16,20 @@ app.add_middleware(
     allow_methods=["*"]
 )
 
+# since one person plays at a time, we only need one connection
+active_connection: WebSocket | None = None
+
+
+async def broadcast_state():
+    """push the latest game state to the connected client"""
+    if active_connection is None:
+        return
+    try:
+        await active_connection.send_text(json.dumps(game_state.get_state_dict()))
+    except:
+        # connection probably dropped, the ws endpoint will clean it up
+        pass
+
 
 # pydantic class
 class SignalRequest(BaseModel):
@@ -22,8 +37,9 @@ class SignalRequest(BaseModel):
 
 
 @app.get("/start-game")
-def start_game():
+async def start_game():
     game_state.start_game()
+    await broadcast_state()
     return game_state.get_state_dict()
 
 
@@ -40,9 +56,32 @@ def get_state():
 
 
 @app.post("/add-signal")
-def add_signal(request: SignalRequest):
+async def add_signal(request: SignalRequest):
     """To be used by AI team to send detected signals to be added to
     the game state dictionray 
     """
     game_state.add_signal(signal=request.signal)
+    await broadcast_state()
     return {"message": "signal added", "signal": request.signal}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """frontend connects here once, and we push state updates to it"""
+    global active_connection
+
+    await websocket.accept()
+    active_connection = websocket
+
+    try:
+        # send the current state as soon as they connect
+        await websocket.send_text(json.dumps(game_state.get_state_dict()))
+
+        while True:
+            # just keep the connection alive, we dont expect messages from the client
+            await websocket.receive_text()
+
+    except WebSocketDisconnect:
+        active_connection = None
+    except:
+        active_connection = None

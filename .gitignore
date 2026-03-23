@@ -1,18 +1,41 @@
-# Root node_modules
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-# Any nested node_modules (backend/frontend)
-**/node_modules/
+# testing
+/coverage
 
-# Logs
-*.log
+# production
+/build
+/dist
 
-# Env files
-.env
-
-# Mac files
+# misc
 .DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Build outputs
-dist/
-build/
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local Editor settings
+.vscode/

@@ -1,8 +1,11 @@
-"""Blink detector V2 – improved stability and reduced false positives"""
+"""Blink detector V2 – improved stability and reduced false positives."""
+
 from __future__ import annotations
+
 import time
 from dataclasses import dataclass
 from typing import Optional, List
+
 import numpy as np
 
 LEFT_EYE = [33, 160, 158, 133, 153, 144]
@@ -28,19 +31,19 @@ def eye_aspect_ratio(pts: np.ndarray, eye_idx: List[int]) -> float:
 
 @dataclass
 class BlinkConfig:
-    calibrate_seconds: float = 1.5
-    baseline_min: float = 0.18
+    calibrate_seconds: float = 1.0
+    baseline_min: float = 0.16
     baseline_max: float = 0.40
 
-    close_ratio: float = 0.65
-    open_ratio: float = 0.78
+    close_ratio: float = 0.78
+    open_ratio: float = 0.90
 
-    ema_alpha: float = 0.35
-    closed_frames_required: int = 3
-    cooldown_ms: int = 350
+    ema_alpha: float = 0.45
+    closed_frames_required: int = 2
+    cooldown_ms: int = 250
 
     both_eyes_as_dash: bool = True
-    max_down_pitch_ratio: float = 0.70
+    max_down_pitch_ratio: float = 0.55
 
 
 class MorseBlinkDetector:
@@ -130,27 +133,25 @@ class MorseBlinkDetector:
             self._left_closed_frames += 1
         elif self._ema_left > left_open_th:
             self._left_closed_frames = 0
-            self._left_was_closed = False
 
         if self._ema_right < right_close_th:
             self._right_closed_frames += 1
         elif self._ema_right > right_open_th:
             self._right_closed_frames = 0
-            self._right_was_closed = False
 
         left_closed = self._left_closed_frames >= self.cfg.closed_frames_required
         right_closed = self._right_closed_frames >= self.cfg.closed_frames_required
-
-        if not self._can_emit(now):
-            return None
 
         if left_closed:
             self._left_was_closed = True
         if right_closed:
             self._right_was_closed = True
 
-        left_reopened = self._left_was_closed and (self._ema_left > left_open_th)
-        right_reopened = self._right_was_closed and (self._ema_right > right_open_th)
+        if not self._can_emit(now):
+            return None
+
+        left_reopened = self._left_was_closed and (self._ema_left > left_open_th) and not left_closed
+        right_reopened = self._right_was_closed and (self._ema_right > right_open_th) and not right_closed
 
         if left_reopened and right_reopened and self.cfg.both_eyes_as_dash:
             self._last_emit_time = now

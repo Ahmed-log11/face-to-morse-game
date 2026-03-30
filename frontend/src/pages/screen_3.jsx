@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import Webcam from "react-webcam"; 
 import background from "../assets/background.svg"; 
 import bottomPatternImage from "../assets/bottomPatternImage.png"; 
-
+import { useNavigate } from 'react-router-dom';
 const Calibration = ({ onCalibrationComplete }) => {
+  const navigate = useNavigate();
   const [status, setStatus] = useState("Stand in front of the camera...");
   const webcamRef = useRef(null);
 
@@ -30,9 +31,9 @@ const Calibration = ({ onCalibrationComplete }) => {
             <Webcam
               audio={false}
               ref={webcamRef}
-              mirrored={true} /* <--- Added the mirror effect here */
+              mirrored={true} 
               screenshotFormat="image/jpeg"
-              className="absolute inset-0 z-0 rounded-3xl" /* <--- Added rounded-3xl here to lock the corners */
+              className="absolute inset-0 z-0 rounded-3xl" 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
               videoConstraints={{
                 facingMode: "user" 
@@ -50,7 +51,7 @@ const Calibration = ({ onCalibrationComplete }) => {
 
           <div className="z-10 pb-2">
             <button 
-              onClick={onCalibrationComplete}
+              onClick={() => navigate('/game')} 
               className="px-12 py-4 bg-[#0B1120] hover:bg-black text-white text-xl font-bold rounded-full [font-family:Oxanium,sans-serif] transition-transform hover:scale-105 shadow-lg uppercase tracking-wider"
             >
               Click when you are ready

@@ -7,7 +7,12 @@ import json
 
 app = FastAPI(title="Face to Morse")
 
-origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+origins = [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",  
+    "http://127.0.0.1:5173"
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +31,7 @@ active_connection: WebSocket | None = None
 
 async def broadcast_state():
     """push the latest game state to the connected client"""
+    global active_connection
     if active_connection is None:
         return
     try:

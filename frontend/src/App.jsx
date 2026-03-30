@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Welcome from './pages/Welcome'; // Make sure the capital W matches the file!
+import Welcome from './pages/Welcome'; 
 import Calibration from './pages/screen_3';
+import GameScreen from './pages/GameScreen';
 
 function App() {
   return (
@@ -13,8 +14,8 @@ function App() {
           {/* Screen 3 Route: localhost:5173/3 */}
           <Route path="/3" element={<Calibration />} />
           
-          {/* You can add Screen 4 here later like this: */}
-          {/* <Route path="/4" element={<Gameplay />} /> */}
+          {/* Your New Game Route! */}
+          <Route path="/game" element={<GameScreen />} />
         </Routes>
       </div>
     </Router>

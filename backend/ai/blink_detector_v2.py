@@ -43,7 +43,7 @@ class BlinkConfig:
     max_down_pitch_ratio: float = 0.70
 
 
-class BlinkDetector:
+class MorseBlinkDetector:
     def __init__(self, config: BlinkConfig | None = None):
         self.cfg = config or BlinkConfig()
 

@@ -80,11 +80,18 @@ class GameState:
                 
         
         elif not expected_morse.startswith(self.current_sequence):
-            self.current_sequence = ""
+           
             self.score = max(0, self.score - 1)
 
 
     def add_signal(self, signal):
+        expected_morse = MORSE_DICT.get(self.target_letter, "")
+        
+        # 1.  If the previous sequence was wrong, clear it BEFORE adding the new blink
+        if len(self.current_sequence) > 0 and not expected_morse.startswith(self.current_sequence):
+            self.current_sequence = ""
+
+        # 2. Add the new signal
         if signal == "DOT":
             self.current_sequence += "."
         if signal == "DASH":

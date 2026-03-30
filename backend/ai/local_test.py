@@ -1,37 +1,37 @@
+"""Run a quick local test of blink detection using your own webcam."""
+
+from __future__ import annotations
+
 import cv2
-from ai.morse_detector import MorseDetector
+
+from .morse_detector import MorseDetector
 
 
-def main():
-    cap = cv2.VideoCapture(0)
+def main() -> None:
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
-        print("Could not open webcam.")
-        return
+        raise RuntimeError("Could not open webcam.")
 
     detector = MorseDetector()
+    try:
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                print("❌ Failed to read frame")
+                continue
+            print("✅ Frame received", frame.shape)
 
-    print("Local AI test running.")
-    print("Left blink => DOT | Right blink => DASH | Both blink => DASH")
-    print("Press Q to quit.")
-
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-
-        # Encode to JPEG bytes to simulate what frontend would send
-        ok2, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-        if ok2:
-            signal = detector.process(buf.tobytes())
+            signal = detector.process(frame)
             if signal:
-                print("SIGNAL:", signal)
+                print(signal)
 
-        cv2.imshow("Face-to-Morse AI Test", frame)
-        if (cv2.waitKey(1) & 0xFF) in (ord("q"), ord("Q")):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+            cv2.imshow("Face-to-Morse (blink test) - press q to quit", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    finally:
+        detector.close()
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

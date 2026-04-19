@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Welcome from './pages/Screen1'; 
+import Screen1 from './pages/Screen1'; 
 import Calibration from './pages/screen_3';
 import GameScreen from './pages/GameScreen';
 

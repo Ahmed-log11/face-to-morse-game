@@ -27,7 +27,9 @@ const GameScreen = () => {
 
   
   const [displayError, setDisplayError] = useState(false);
-
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/reset-detector`);
+}, []);
   useEffect(() => {
     if (gameState?.score > prevScoreRef.current) {
       setWordSuccessFlash(true); 
@@ -38,15 +40,38 @@ const GameScreen = () => {
   }, [gameState?.score]);
 
   useEffect(() => {
-    const ws = new WebSocket(WS_URL);
-    ws.onopen = () => console.log("🟢 WebSocket Connected");
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      setGameState(data);
+    let ws;
+    let reconnectTimer;
+
+    const connect = () => {
+        ws = new WebSocket(WS_URL);
+        
+        ws.onopen = () => console.log("🟢 WebSocket Connected");
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("WS data:", data);
+            setGameState(data);
+        };
+        
+        ws.onclose = () => {
+            console.log("🔴 WebSocket Disconnected, retrying...");
+            reconnectTimer = setTimeout(connect, 1000);
+        };
+        
+        ws.onerror = (err) => {
+            console.error("WebSocket error:", err);
+            ws.close();
+        };
     };
-    ws.onclose = () => console.log("🔴 WebSocket Disconnected");
-    return () => ws.close();
-  }, []);
+
+    connect();
+
+    return () => {
+        clearTimeout(reconnectTimer);
+        if (ws) ws.close();
+    };
+}, []);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -77,7 +102,7 @@ const GameScreen = () => {
           }
         }
       }
-    }, 150);
+    }, 100);
     return () => clearInterval(frameInterval);
   }, []);
 

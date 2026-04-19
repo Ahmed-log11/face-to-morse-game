@@ -9,7 +9,7 @@ import numpy as np
 import mediapipe as mp
 
 from .frame_decode import decode_frame
-from .blink_detector_v2 import MorseBlinkDetector, BlinkConfig
+from .blink_detector_v3 import MorseBlinkDetector, BlinkConfig
 
 
 class MorseDetector:
@@ -62,7 +62,11 @@ class MorseDetector:
             print(f"🚀 Signal detected: {signal}")
 
         return signal
-
+    def reset(self) -> None:
+        """Reset the blink detector so it re-calibrates for a new player.
+        Called by the /reset-detector endpoint in main.py."""
+        self.blinks.reset()  
     def close(self) -> None:
         if self._face_mesh is not None:
             self._face_mesh.close()
+          

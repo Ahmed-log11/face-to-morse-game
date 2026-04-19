@@ -49,8 +49,25 @@ class FrameRequest(BaseModel):
     frame: str
 
 
+# ─────────────────────────────────────────────
+# NEW ENDPOINT: Call this when GameScreen loads
+# This resets the detector so calibration starts
+# fresh during the countdown for each new player
+# ─────────────────────────────────────────────
+@app.get("/reset-detector")
+async def reset_detector():
+    """Called when GameScreen mounts, before countdown starts.
+    Resets the blink detector so it calibrates during the 3-second
+    countdown using the current player's face."""
+    detector.reset()
+    return {"status": "detector reset"}
+
+
 @app.get("/start-game")
 async def start_game():
+    # REMOVED detector.reset() from here — it now happens earlier
+    # via /reset-detector so calibration runs DURING the countdown,
+    # not AFTER it
     game_state.start_game()
     await broadcast_state()
     return game_state.get_state_dict()

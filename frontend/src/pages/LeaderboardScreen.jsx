@@ -1,0 +1,239 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import techhub from "../assets/techhub.png";
+import fcit from "../assets/fcit.png";
+import bg from "../assets/background.png";
+import crown from "../assets/crown.png";
+import star from "../assets/star.png";
+import win from "../assets/win.png";
+
+const avatars = [
+  "🤖",
+  "🐱",
+  "🦊",
+  "🐼",
+  "👾",
+  "🐯",
+  "🐸",
+  "🐧",
+  "🦁",
+  "🦄"
+];
+
+const getShuffledAvatars = () => {
+  return [...avatars].sort(() => Math.random() - 0.5);
+};
+
+const randomAvatars = getShuffledAvatars();
+
+const leaderboardByDay = {
+  "Day 1": [
+    { avatar: randomAvatars[0], score: 150 },
+    { avatar: randomAvatars[1], score: 120 },
+    { avatar: randomAvatars[2], score: 95 },
+  ],
+  "Day 2": [
+    { avatar: randomAvatars[3], score: 180 },
+    { avatar: randomAvatars[4], score: 140 },
+    { avatar: randomAvatars[5], score: 110 },
+  ],
+  "Day 3": [
+    { avatar: randomAvatars[6], score: 220 },
+    { avatar: randomAvatars[7], score: 170, isCurrentPlayer: true },
+    { avatar: randomAvatars[8], score: 160 },
+    { avatar: randomAvatars[9], score: 130 },
+  ],
+  "Day 4": [
+    { avatar: randomAvatars[1], score: 200 },
+    { avatar: randomAvatars[2], score: 150 },
+    { avatar: randomAvatars[3], score: 100 },
+  ],
+};
+
+const currentDay = "Day 3";
+
+const currentDayPlayers = leaderboardByDay[currentDay];
+
+const sortedCurrentDayPlayers = [...currentDayPlayers].sort(
+  (a, b) => b.score - a.score
+);
+
+const highestScore = sortedCurrentDayPlayers[0];
+
+const currentPlayer = sortedCurrentDayPlayers.find(
+  (player) => player.isCurrentPlayer
+);
+
+const currentPlayerRank =
+  sortedCurrentDayPlayers.findIndex((player) => player.isCurrentPlayer) + 1;
+
+const dailyWinners = Object.entries(leaderboardByDay).map(([day, players]) => {
+  const winner = [...players].sort((a, b) => b.score - a.score)[0];
+  return {
+    day,
+    avatar: winner.avatar,
+    score: winner.score,
+  };
+});
+
+const LeaderboardScreen = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="relative min-h-screen overflow-hidden text-white">
+      {/* background */}
+      <img
+        src={bg}
+        alt="background"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* logos */}
+      <div className="absolute top-3 left-3 sm:top-5 sm:left-5 md:top-6 md:left-8 z-20">
+        <img
+          src={techhub}
+          alt="TechHub"
+          className="h-9 sm:h-10 md:h-14 lg:h-18 opacity-85 animate-game delay-1"
+        />
+      </div>
+
+      <div className="absolute top-3 right-3 sm:top-5 sm:right-5 md:top-6 md:right-8 z-20">
+        <img
+          src={fcit}
+          alt="FCIT"
+          className="h-9 sm:h-10 md:h-14 lg:h-18 opacity-80 animate-game delay-1"
+        />
+      </div>
+
+      {/* content */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-3 sm:px-5 md:px-6 text-center gap-4 sm:gap-5 py-16 sm:py-20 md:py-24">
+        {/* title */}
+        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold [font-family:Oxanium,sans-serif] animate-game delay-1 mt-6 sm:mt-8 md:mt-10 leading-tight">
+          Leaderboard
+        </h1>
+
+        {/* top section */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 w-full max-w-[95vw] md:max-w-5xl xl:max-w-6xl animate-game delay-2">
+          {/* Highest Score */}
+          <div className="bg-slate-900/50 backdrop-blur-lg border border-cyan-300/20 rounded-3xl p-3 sm:p-4 md:p-5 shadow-[0_0_40px_rgba(34,211,238,0.1)] text-left hover:scale-[1.02] transition duration-300 min-w-0">
+            <h2 className="mb-2 sm:mb-3">
+              <div className="flex items-center gap-2">
+                <img
+                  src={crown}
+                  alt="crown"
+                  className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
+                />
+                <span className="text-cyan-400 text-sm sm:text-lg md:text-2xl font-semibold leading-tight">
+                  Highest Score
+                </span>
+              </div>
+            </h2>
+
+            <div className="rounded-3xl border border-cyan-300/30 bg-cyan-400/10 px-3 py-4 sm:px-4 sm:py-5 md:px-5 md:py-6 flex flex-col items-center justify-center text-center shadow-[0_0_30px_rgba(34,211,238,0.12)] floatCard min-h-[160px] sm:min-h-[190px] md:min-h-[210px]">
+              <div className="text-3xl sm:text-4xl md:text-6xl mb-2 sm:mb-3">
+                {highestScore.avatar}
+              </div>
+
+              <div className="text-cyan-300 text-xs sm:text-sm md:text-lg font-medium mb-1 sm:mb-2">
+                {currentDay}
+              </div>
+
+              <div className="text-white text-lg sm:text-xl md:text-3xl font-bold">
+                {highestScore.score} pts
+              </div>
+
+              <div className="mt-2 sm:mt-3 text-slate-300 text-[10px] sm:text-xs md:text-base leading-snug">
+                Top score in the current day
+              </div>
+            </div>
+          </div>
+
+          {/* Current Player */}
+          <div className="bg-slate-900/50 backdrop-blur-lg border border-cyan-300/20 rounded-3xl p-3 sm:p-4 md:p-5 shadow-[0_0_40px_rgba(34,211,238,0.1)] text-left hover:scale-[1.02] transition duration-300 min-w-0">
+            <h2 className="mb-2 sm:mb-3">
+              <div className="flex items-center gap-2">
+                <img
+                  src={star}
+                  alt="star"
+                  className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8"
+                />
+                <span className="text-cyan-400 text-sm sm:text-lg md:text-2xl font-semibold leading-tight">
+                  Current Player
+                </span>
+              </div>
+            </h2>
+
+            <div className="rounded-3xl border border-cyan-300/40 bg-cyan-400/15 px-3 py-4 sm:px-4 sm:py-5 md:px-5 md:py-6 flex flex-col items-center justify-center text-center shadow-[0_0_35px_rgba(34,211,238,0.18)] glowPulse min-h-[160px] sm:min-h-[190px] md:min-h-[210px]">
+              <div className="text-3xl sm:text-4xl md:text-6xl mb-2 sm:mb-3">
+                {currentPlayer.avatar}
+              </div>
+
+              <div className="text-white text-base sm:text-lg md:text-2xl font-bold mb-1 sm:mb-2">
+                {currentPlayer.score} pts
+              </div>
+
+              <div className="text-cyan-300 text-xs sm:text-sm md:text-lg font-medium">
+                Rank #{currentPlayerRank}
+              </div>
+
+              <div className="mt-2 sm:mt-3 text-slate-300 text-[10px] sm:text-xs md:text-base leading-snug">
+                Your score in {currentDay}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Winners */}
+        <div className="w-full max-w-[92vw] md:max-w-4xl xl:max-w-6xl animate-game delay-3">
+          <div className="bg-slate-900/50 backdrop-blur-lg border border-cyan-300/20 rounded-3xl p-4 sm:p-5 md:p-6 shadow-[0_0_40px_rgba(34,211,238,0.1)] text-left">
+            <h2 className="mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <img
+                  src={win}
+                  alt="win"
+                  className="w-7 h-7 sm:w-8 sm:h-8"
+                />
+                <span className="text-cyan-400 text-lg sm:text-xl md:text-2xl font-semibold">
+                  Daily Winners
+                </span>
+              </div>
+            </h2>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+              {dailyWinners.map((winner, index) => (
+                <div
+                  key={index}
+                  className="rounded-2xl px-3 py-4 sm:px-4 sm:py-5 bg-slate-800/50 border border-white/10 flex flex-col items-center text-center transition duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(34,211,238,0.12)] animate-game min-h-[140px] sm:min-h-[160px]"
+                >
+                  <div className="text-cyan-300 font-semibold text-sm sm:text-base md:text-lg mb-1 sm:mb-2">
+                    {winner.day}
+                  </div>
+
+                  <div className="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-3 floatSmall">
+                    {winner.avatar}
+                  </div>
+
+                  <div className="text-white text-xs sm:text-sm md:text-lg font-semibold">
+                    {winner.score} pts
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* button */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 animate-game delay-3 pt-1 sm:pt-2">
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-2xl bg-cyan-500/90 hover:bg-cyan-400 text-white text-sm sm:text-base md:text-lg font-semibold shadow-[0_0_25px_rgba(34,211,238,0.25)] hover:scale-105 transition"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LeaderboardScreen;

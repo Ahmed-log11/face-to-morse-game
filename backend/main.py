@@ -3,7 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from models.game_state import game_state
 from ai import MorseDetector
 from pydantic import BaseModel
+from datetime import date as date_type
 import json
+import os
+
+SCORES_FILE = os.path.join(os.path.dirname(__file__), "scores.json")
+
+def _load_scores() -> list:
+    if os.path.exists(SCORES_FILE):
+        with open(SCORES_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def _save_scores(scores: list):
+    with open(SCORES_FILE, "w") as f:
+        json.dump(scores, f)
+
+scores_db: list = _load_scores()
 
 app = FastAPI(title="Face to Morse")
 
@@ -47,6 +63,10 @@ class SignalRequest(BaseModel):
 class FrameRequest(BaseModel):
     # base64 encoded jpeg frame from the frontend webcam
     frame: str
+
+class ScoreRequest(BaseModel):
+    score: int
+    avatar: str
 
 
 # ─────────────────────────────────────────────
@@ -110,6 +130,19 @@ async def process_frame(request: FrameRequest):
         await broadcast_state()
 
     return {"signal": signal}
+
+
+@app.post("/submit-score")
+def submit_score(request: ScoreRequest):
+    entry = {"score": request.score, "avatar": request.avatar, "date": str(date_type.today())}
+    scores_db.append(entry)
+    _save_scores(scores_db)
+    return {"status": "saved", "entry": entry}
+
+
+@app.get("/leaderboard")
+def get_leaderboard():
+    return sorted(scores_db, key=lambda x: x["score"], reverse=True)
 
 
 @app.websocket("/ws")

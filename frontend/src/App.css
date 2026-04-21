@@ -41,3 +41,42 @@
   color: #888;
 }
 
+
+.floatCard {
+  animation: floatCard 2.4s ease-in-out infinite;
+}
+
+@keyframes floatCard {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.floatSmall {
+  animation: floatSmall 2s ease-in-out infinite;
+}
+
+@keyframes floatSmall {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.glowPulse {
+  animation: glowPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(34, 211, 238, 0.3);
+  }
+}

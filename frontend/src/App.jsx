@@ -3,6 +3,7 @@ import Screen1 from './pages/Screen1';
 import Calibration from './pages/screen_3';
 import GameScreen from './pages/GameScreen';
 import Screen2 from './pages/Screen2';
+import Leaderboard from './pages/LeaderboardScreen'; 
 
 function App() {
   return (
@@ -19,7 +20,11 @@ function App() {
           {/* الصفحة الثالثة */}
           <Route path="/3" element={<Calibration />} />
 
+          {/* صفحة اللعبة */}
           <Route path="/game" element={<GameScreen />} />
+
+          {/*  Leaderboard */}
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
         </Routes>
       </div>

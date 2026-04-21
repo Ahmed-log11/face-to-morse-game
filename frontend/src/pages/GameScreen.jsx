@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Webcam from 'react-webcam';
+import { useNavigate } from 'react-router-dom';
+
+const AVATARS = ["🤖","🐱","🦊","🐼","👾","🐯","🐸","🐧","🦁","🦄"];
 
 const BACKEND_URL = "http://localhost:8000";
 const WS_URL = "ws://localhost:8000/ws";
@@ -15,15 +18,19 @@ const MORSE_CODE = {
 };
 
 const GameScreen = () => {
+  const navigate = useNavigate();
   const webcamRef = useRef(null);
   const [gameState, setGameState] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [isGameActive, setIsGameActive] = useState(false);
-  
+
   // Local timer state for smooth visual ticking
   const [localTime, setLocalTime] = useState(120);
   const [wordSuccessFlash, setWordSuccessFlash] = useState(false);
   const prevScoreRef = useRef(0);
+  const [gameOver, setGameOver] = useState(false);
+  const gameEndedRef = useRef(false);
+  const avatarRef = useRef(AVATARS[Math.floor(Math.random() * AVATARS.length)]);
 
   
   const [displayError, setDisplayError] = useState(false);
@@ -114,7 +121,24 @@ const GameScreen = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isGameActive]); 
+  }, [isGameActive]);
+
+  useEffect(() => {
+    if (localTime === 0 && isGameActive && !gameEndedRef.current) {
+      gameEndedRef.current = true;
+      setGameOver(true);
+      const finalScore = gameState?.score || 0;
+      const avatar = avatarRef.current;
+      fetch(`${BACKEND_URL}/submit-score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score: finalScore, avatar })
+      });
+      setTimeout(() => {
+        navigate('/leaderboard', { state: { score: finalScore, avatar } });
+      }, 2500);
+    }
+  }, [localTime, isGameActive, gameState?.score, navigate]);
 
   const formatTime = (time) => {
     if (time === undefined || time === null) return "0:00";
@@ -184,6 +208,19 @@ const GameScreen = () => {
         }`} 
       />
 
+      {gameOver && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          <p className="text-cyan-400 text-xl uppercase tracking-widest mb-4 font-bold animate-pulse">Time's Up!</p>
+          <h1 className="text-7xl md:text-9xl font-black text-white drop-shadow-[0_0_40px_rgba(34,211,238,0.6)] mb-6">
+            GAME OVER
+          </h1>
+          <p className="text-3xl md:text-4xl font-bold text-green-400 drop-shadow-[0_0_20px_rgba(74,222,128,0.6)]">
+            {gameState?.score || 0} pts
+          </p>
+          <p className="mt-6 text-gray-400 text-lg">Heading to leaderboard...</p>
+        </div>
+      )}
+
       {countdown > 0 ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 w-full h-full bg-black/50 backdrop-blur-sm">
           <h1 className="text-4xl text-cyan-400 mb-4 tracking-wider uppercase">Calibrating AI...</h1>
@@ -235,7 +272,7 @@ const GameScreen = () => {
             <p className="text-gray-500 text-sm md:text-lg tracking-[0.2em] uppercase mb-2 md:mb-4 font-bold">Target Word</p>
             <div className="flex flex-wrap justify-center gap-3 md:gap-6">
               {gameState?.targetWord?.split('').map((letter, index) => {
-                const isCurrentTarget = letter === gameState?.targetLetter;
+                const isCurrentTarget = index === gameState?.targetWordIndex;
                 const hint = MORSE_CODE[letter];
 
                 return (

@@ -112,6 +112,7 @@ class GameState:
             "level": self.level,
             "timeLeft": self.get_time_left(),
             "targetWord": self.target_word,
+            "targetWordIndex": self.target_word_index,
             "targetLetter": self.target_letter,
             "currentSequence": self.current_sequence
         }

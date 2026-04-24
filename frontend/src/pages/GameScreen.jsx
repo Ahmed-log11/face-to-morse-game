@@ -30,13 +30,19 @@ const GameScreen = () => {
   const prevScoreRef = useRef(0);
   const [gameOver, setGameOver] = useState(false);
   const gameEndedRef = useRef(false);
-  const avatarRef = useRef(AVATARS[Math.floor(Math.random() * AVATARS.length)]);
+  const avatarRef = useRef(null);
 
   
   const [displayError, setDisplayError] = useState(false);
   useEffect(() => {
     fetch(`${BACKEND_URL}/reset-detector`);
 }, []);
+
+  useEffect(() => {
+    if (avatarRef.current === null) {
+      avatarRef.current = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    }
+  }, []);
   useEffect(() => {
     if (gameState?.score > prevScoreRef.current) {
       setWordSuccessFlash(true); 
@@ -121,7 +127,7 @@ const GameScreen = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isGameActive]);
+  }, [isGameActive, localTime]);
 
   useEffect(() => {
     if (localTime === 0 && isGameActive && !gameEndedRef.current) {
@@ -267,9 +273,8 @@ const GameScreen = () => {
             </div>
           </div>
 
-          {/* Target Word Highlighting & Hint */}
+          {/* Word Highlighting & Hint */}
           <div className="text-center mb-6">
-            <p className="text-gray-500 text-sm md:text-lg tracking-[0.2em] uppercase mb-2 md:mb-4 font-bold">Target Word</p>
             <div className="flex flex-wrap justify-center gap-3 md:gap-6">
               {gameState?.targetWord?.split('').map((letter, index) => {
                 const isCurrentTarget = index === gameState?.targetWordIndex;

@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import Webcam from "react-webcam"; 
 import background from "../assets/background.svg"; 
 import bottomPatternImage from "../assets/bottomPatternImage.png"; 
 import { useNavigate } from 'react-router-dom';
-const Calibration = ({ onCalibrationComplete }) => {
+const Calibration = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState("Stand in front of the camera...");
+  const status = "Stand in front of the camera...";
   const webcamRef = useRef(null);
 
   return (

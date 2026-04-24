@@ -8,6 +8,7 @@ class GameState:
 
         # game progress
         self.target_word = ""
+        self._last_word = None
         self.target_word_index = 0
         self.target_letter = ""
         self.current_sequence = ""
@@ -33,7 +34,15 @@ class GameState:
 
     def pick_new_word(self):
         level_words = WORDS.get(self.level, WORDS[3])
-        self.target_word = random.choice(level_words)
+        if len(level_words) > 1:
+            picked = random.choice(level_words)
+            while picked == self._last_word:
+                picked = random.choice(level_words)
+            self.target_word = picked
+        else:
+            self.target_word = random.choice(level_words)
+
+        self._last_word = self.target_word
         self.target_word_index = 0
         self.target_letter = self.target_word[self.target_word_index]
 

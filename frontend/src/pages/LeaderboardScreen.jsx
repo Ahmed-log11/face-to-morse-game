@@ -39,7 +39,7 @@ const LeaderboardScreen = () => {
   });
   const dailyWinners = Object.entries(dailyWinnersMap)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, entry], index) => ({ label: `Day ${index + 1}`, ...entry }));
+    .map(([, entry], index) => ({ label: `Day ${index + 1}`, ...entry }));
 
   return (
     <div className="relative min-h-screen overflow-hidden text-white">

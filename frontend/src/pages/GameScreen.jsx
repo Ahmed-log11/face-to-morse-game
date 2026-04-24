@@ -30,13 +30,25 @@ const GameScreen = () => {
   const [gameOver, setGameOver] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState("Time's Up!");
   const gameEndedRef = useRef(false);
+  const gameStartedRef = useRef(false);
   const avatarRef = useRef(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [level2HintIndex, setLevel2HintIndex] = useState(null);
 
   
   const [displayError, setDisplayError] = useState(false);
   useEffect(() => {
     fetch(`${BACKEND_URL}/reset-detector`);
 }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    const update = () => setReducedMotion(Boolean(mq.matches));
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
 
   useEffect(() => {
     if (avatarRef.current === null) {
@@ -94,6 +106,9 @@ const GameScreen = () => {
       setIsGameActive(true);
       fetch(`${BACKEND_URL}/start-game`)
         .then(res => res.json())
+        .then(() => {
+          gameStartedRef.current = true;
+        })
         .catch(err => console.error("Error starting game:", err));
     }
   }, [countdown, isGameActive]);
@@ -120,16 +135,17 @@ const GameScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof gameState?.timeLeft === "number") {
+    if (isGameActive && typeof gameState?.timeLeft === "number") {
       setLocalTime(gameState.timeLeft);
     }
-  }, [gameState?.timeLeft]);
+  }, [isGameActive, gameState?.timeLeft]);
 
   useEffect(() => {
     const isEnded =
       isGameActive &&
+      gameStartedRef.current &&
       !gameEndedRef.current &&
-      (localTime === 0 || gameState?.isActive === false);
+      (gameState?.endReason || (localTime === 0 && gameState?.isActive === false));
 
     if (isEnded) {
       gameEndedRef.current = true;
@@ -162,10 +178,98 @@ const GameScreen = () => {
     return morseString.replace(/\./g, '•').replace(/-/g, '—');
   };
 
+  const renderMorseHint = (morseString, isCurrentTarget) => {
+    const styled = formatMorseStyle(morseString);
+    if (!styled) return null;
+
+    if (reducedMotion) {
+      return styled;
+    }
+
+    if (gameState?.level === 2 && isCurrentTarget) {
+      // Reveal one symbol at a time, but keep each symbol in its own position.
+      return (
+        <span className="inline-flex items-center justify-center gap-2">
+          {Array.from(styled).map((ch, idx) => (
+            <span
+              key={idx}
+              className={`inline-block w-[1.1ch] text-center transition-opacity duration-75 ${
+                level2HintIndex === idx
+                  ? "opacity-100"
+                  : "opacity-15 blur-[1px]"
+              }`}
+            >
+              {level2HintIndex === idx ? ch : "·"}
+            </span>
+          ))}
+        </span>
+      );
+    }
+
+    return styled;
+  };
+
   // ERROR FLASH LOGIC
   const expectedMorse = gameState?.targetLetter ? MORSE_CODE[gameState.targetLetter] : "";
   const currentInput = gameState?.currentSequence || "";
   const isError = currentInput.length > 0 && !expectedMorse.startsWith(currentInput);
+
+  useEffect(() => {
+    if (!isGameActive || reducedMotion || gameState?.level !== 2) {
+      setLevel2HintIndex(null);
+      return;
+    }
+
+    const targetLetter = gameState?.targetLetter;
+    const morse = targetLetter ? MORSE_CODE[targetLetter] : "";
+    if (!morse) {
+      setLevel2HintIndex(null);
+      return;
+    }
+
+    const buildOrder = () => {
+      const lastIndex = morse.length - 1;
+      const rest = [];
+      for (let i = 0; i < lastIndex; i += 1) rest.push(i);
+      for (let i = rest.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      return [lastIndex, ...rest];
+    };
+
+    let cancelled = false;
+    let order = buildOrder();
+    let pos = 0;
+
+    // Slightly slower than before, but still "blink and you miss it".
+    const showMs = 130;
+    const hideMs = 120;
+
+    const stepShow = () => {
+      if (cancelled) return;
+      const idx = order[pos];
+      setLevel2HintIndex(idx);
+      setTimeout(stepHide, showMs);
+    };
+
+    const stepHide = () => {
+      if (cancelled) return;
+      setLevel2HintIndex(null);
+      pos += 1;
+      if (pos >= order.length) {
+        order = buildOrder();
+        pos = 0;
+      }
+      setTimeout(stepShow, hideMs);
+    };
+
+    stepShow();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
 
   // Trigger the 800ms flash when an error occurs
   useEffect(() => {
@@ -300,9 +404,13 @@ const GameScreen = () => {
                     
                     {/* The Morse Code Hint Dropdown */}
                     <div className={`mt-2 text-xl md:text-2xl font-bold tracking-[0.2em] transition-all duration-300 ${
-                      isCurrentTarget ? "text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)] opacity-100" : "opacity-0"
+                      isCurrentTarget
+                        ? (gameState?.level === 2
+                            ? "text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)]"
+                            : "text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)] opacity-100")
+                        : "opacity-0"
                     }`}>
-                      {formatMorseStyle(hint)}
+                      {renderMorseHint(hint, isCurrentTarget)}
                     </div>
                   </div>
                 )

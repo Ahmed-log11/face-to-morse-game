@@ -8,7 +8,7 @@ class GameState:
         self.max_level = 4
         self.level_time_limits = {
             1: 120,  # level 1
-            2: 90,   # level 2 (1.5 min)
+            2: 60,   # level 2 (1 min)
             3: 90,   # level 3 (1.5 min)
             4: 90,   # level 4 (extreme, 1.5 min for now)
         }

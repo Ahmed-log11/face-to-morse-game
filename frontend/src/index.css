@@ -105,3 +105,76 @@
 .force-column {
   grid-template-columns: 1fr !important;
 }
+
+@keyframes hintPeek {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(2px) scale(0.98);
+  }
+  5% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+  16% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(2px) scale(0.98);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(2px) scale(0.98);
+  }
+}
+
+.hint-peek {
+  animation: hintPeek 2s infinite;
+  will-change: opacity, filter, transform;
+}
+
+@keyframes morseConfuse {
+  0% {
+    opacity: 0.25;
+    filter: blur(6px);
+    transform: translateY(1px) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1.06);
+  }
+  100% {
+    opacity: 0.4;
+    filter: blur(4px);
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+.morse-confuse .morse-symbol {
+  animation: morseConfuse 420ms infinite;
+  display: inline-block;
+  will-change: opacity, filter, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint-peek {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .morse-confuse .morse-symbol {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}

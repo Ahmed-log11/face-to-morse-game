@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Webcam from 'react-webcam';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const AVATARS = ["🤖","🐱","🦊","🐼","👾","🐯","🐸","🐧","🦁","🦄"];
 
@@ -19,6 +19,7 @@ const MORSE_CODE = {
 
 const GameScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const webcamRef = useRef(null);
   const [gameState, setGameState] = useState(null);
   const [countdown, setCountdown] = useState(3);
@@ -36,6 +37,15 @@ const GameScreen = () => {
   const [level2HintIndex, setLevel2HintIndex] = useState(null);
   const [level3HintVisible, setLevel3HintVisible] = useState(false);
   const level3HintTimerRef = useRef(null);
+  const usernameRef = useRef(
+    (location?.state?.username || (() => {
+      try {
+        return localStorage.getItem("ftm_username") || "";
+      } catch {
+        return "";
+      }
+    })()).trim()
+  );
 
   
   const [displayError, setDisplayError] = useState(false);
@@ -157,13 +167,14 @@ const GameScreen = () => {
       );
       const finalScore = gameState?.score || 0;
       const avatar = avatarRef.current;
+      const username = usernameRef.current || "PLAYER";
       fetch(`${BACKEND_URL}/submit-score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: finalScore, avatar })
+        body: JSON.stringify({ score: finalScore, avatar, username })
       });
       setTimeout(() => {
-        navigate('/leaderboard', { state: { score: finalScore, avatar } });
+        navigate('/leaderboard', { state: { score: finalScore, avatar, username } });
       }, 2500);
     }
   }, [localTime, isGameActive, gameState?.isActive, gameState?.endReason, gameState?.score, navigate]);

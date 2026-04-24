@@ -9,8 +9,8 @@ class GameState:
         self.level_time_limits = {
             1: 120,  # level 1
             2: 60,   # level 2 (1 min)
-            3: 40,   # level 3 (40s)
-            4: 90,   # level 4 (extreme, 1.5 min for now)
+            3: 30,   # level 3 (30s)
+            4: 30,   # level 4 (30s)
         }
 
         # game progress

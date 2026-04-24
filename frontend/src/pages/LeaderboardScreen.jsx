@@ -41,6 +41,8 @@ const LeaderboardScreen = () => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, entry], index) => ({ label: `Day ${index + 1}`, ...entry }));
 
+  const getName = (entry) => (entry?.username || "PLAYER");
+
   return (
     <div className="relative min-h-screen overflow-hidden text-white">
       {/* background */}
@@ -95,6 +97,9 @@ const LeaderboardScreen = () => {
                   {highestScore ? (
                     <>
                       <div className="text-3xl sm:text-4xl md:text-6xl mb-2 sm:mb-3">{highestScore.avatar}</div>
+                      <div className="text-white text-sm sm:text-base md:text-xl font-semibold mb-1">
+                        {getName(highestScore)}
+                      </div>
                       <div className="text-cyan-300 text-xs sm:text-sm md:text-lg font-medium mb-1 sm:mb-2">
                         {`Day ${Object.keys(dailyWinnersMap).sort().indexOf(highestScore.date) + 1}`}
                       </div>
@@ -124,6 +129,9 @@ const LeaderboardScreen = () => {
                   {currentPlayerData ? (
                     <>
                       <div className="text-3xl sm:text-4xl md:text-6xl mb-2 sm:mb-3">{currentPlayerData.avatar}</div>
+                      <div className="text-white text-sm sm:text-base md:text-xl font-semibold mb-1">
+                        {currentPlayerData.username || "PLAYER"}
+                      </div>
                       <div className="text-white text-base sm:text-lg md:text-2xl font-bold mb-1 sm:mb-2">
                         {currentPlayerData.score} pts
                       </div>
@@ -165,6 +173,9 @@ const LeaderboardScreen = () => {
                         </div>
                         <div className="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-3 floatSmall">
                           {winner.avatar}
+                        </div>
+                        <div className="text-white text-xs sm:text-sm md:text-base font-semibold mb-1">
+                          {getName(winner)}
                         </div>
                         <div className="text-white text-xs sm:text-sm md:text-lg font-semibold">
                           {winner.score} pts

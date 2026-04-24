@@ -67,6 +67,7 @@ class FrameRequest(BaseModel):
 class ScoreRequest(BaseModel):
     score: int
     avatar: str
+    username: str | None = None
 
 
 # ─────────────────────────────────────────────
@@ -134,7 +135,10 @@ async def process_frame(request: FrameRequest):
 
 @app.post("/submit-score")
 def submit_score(request: ScoreRequest):
-    entry = {"score": request.score, "avatar": request.avatar, "date": str(date_type.today())}
+    username = (request.username or "").strip()
+    if not username:
+        username = "PLAYER"
+    entry = {"score": request.score, "avatar": request.avatar, "username": username, "date": str(date_type.today())}
     scores_db.append(entry)
     _save_scores(scores_db)
     return {"status": "saved", "entry": entry}

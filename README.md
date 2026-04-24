@@ -95,7 +95,7 @@ Create a virtual environment to keep our Python packages clean: python -m venv v
 
 Activate the virtual environment: venv\Scripts\activate (Note: You should see (venv) appear in your terminal prompt).
 
-Install the required packages: pip install fastapi uvicorn mediapipe (Note: this might change as we add more tools).
+Install the required packages: pip install -r requirements.txt
 
 Step 3: Install the Frontend (UI)
 

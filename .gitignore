@@ -37,5 +37,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python virtualenvs
+.venv/
+venv/
+backend/venv/
+
+# Local app data
+backend/scores.json
+
 # Local Editor settings
 .vscode/

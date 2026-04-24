@@ -34,6 +34,8 @@ const GameScreen = () => {
   const avatarRef = useRef(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [level2HintIndex, setLevel2HintIndex] = useState(null);
+  const [level3HintVisible, setLevel3HintVisible] = useState(false);
+  const level3HintTimerRef = useRef(null);
 
   
   const [displayError, setDisplayError] = useState(false);
@@ -206,6 +208,13 @@ const GameScreen = () => {
       );
     }
 
+    if (gameState?.level === 3 && isCurrentTarget) {
+      if (!level3HintVisible) {
+        return <span className="opacity-0 select-none">{styled}</span>;
+      }
+      return styled;
+    }
+
     return styled;
   };
 
@@ -268,6 +277,31 @@ const GameScreen = () => {
 
     return () => {
       cancelled = true;
+    };
+  }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
+
+  useEffect(() => {
+    if (level3HintTimerRef.current) {
+      clearTimeout(level3HintTimerRef.current);
+      level3HintTimerRef.current = null;
+    }
+
+    if (!isGameActive || reducedMotion || gameState?.level !== 3 || !gameState?.targetLetter) {
+      setLevel3HintVisible(false);
+      return;
+    }
+
+    setLevel3HintVisible(true);
+    level3HintTimerRef.current = setTimeout(() => {
+      setLevel3HintVisible(false);
+      level3HintTimerRef.current = null;
+    }, 450);
+
+    return () => {
+      if (level3HintTimerRef.current) {
+        clearTimeout(level3HintTimerRef.current);
+        level3HintTimerRef.current = null;
+      }
     };
   }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
 

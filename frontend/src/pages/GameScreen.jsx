@@ -24,11 +24,11 @@ const GameScreen = () => {
   const [countdown, setCountdown] = useState(3);
   const [isGameActive, setIsGameActive] = useState(false);
 
-  // Local timer state for smooth visual ticking
   const [localTime, setLocalTime] = useState(120);
   const [wordSuccessFlash, setWordSuccessFlash] = useState(false);
   const prevScoreRef = useRef(0);
   const [gameOver, setGameOver] = useState(false);
+  const [gameOverMessage, setGameOverMessage] = useState("Time's Up!");
   const gameEndedRef = useRef(false);
   const avatarRef = useRef(null);
 
@@ -120,19 +120,23 @@ const GameScreen = () => {
   }, []);
 
   useEffect(() => {
-    let interval;
-    if (isGameActive && localTime > 0) {
-      interval = setInterval(() => {
-        setLocalTime((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
+    if (typeof gameState?.timeLeft === "number") {
+      setLocalTime(gameState.timeLeft);
     }
-    return () => clearInterval(interval);
-  }, [isGameActive, localTime]);
+  }, [gameState?.timeLeft]);
 
   useEffect(() => {
-    if (localTime === 0 && isGameActive && !gameEndedRef.current) {
+    const isEnded =
+      isGameActive &&
+      !gameEndedRef.current &&
+      (localTime === 0 || gameState?.isActive === false);
+
+    if (isEnded) {
       gameEndedRef.current = true;
       setGameOver(true);
+      setGameOverMessage(
+        gameState?.endReason === "FINISHED_ALL_LEVELS" ? "YOU WIN!" : "Time's Up!"
+      );
       const finalScore = gameState?.score || 0;
       const avatar = avatarRef.current;
       fetch(`${BACKEND_URL}/submit-score`, {
@@ -144,7 +148,7 @@ const GameScreen = () => {
         navigate('/leaderboard', { state: { score: finalScore, avatar } });
       }, 2500);
     }
-  }, [localTime, isGameActive, gameState?.score, navigate]);
+  }, [localTime, isGameActive, gameState?.isActive, gameState?.endReason, gameState?.score, navigate]);
 
   const formatTime = (time) => {
     if (time === undefined || time === null) return "0:00";
@@ -216,7 +220,7 @@ const GameScreen = () => {
 
       {gameOver && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-          <p className="text-cyan-400 text-xl uppercase tracking-widest mb-4 font-bold animate-pulse">Time's Up!</p>
+          <p className="text-cyan-400 text-xl uppercase tracking-widest mb-4 font-bold animate-pulse">{gameOverMessage}</p>
           <h1 className="text-7xl md:text-9xl font-black text-white drop-shadow-[0_0_40px_rgba(34,211,238,0.6)] mb-6">
             GAME OVER
           </h1>

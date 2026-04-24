@@ -7,6 +7,13 @@ const AVATARS = ["🤖","🐱","🦊","🐼","👾","🐯","🐸","🐧","🦁",
 const BACKEND_URL = "http://localhost:8000";
 const WS_URL = "ws://localhost:8000/ws";
 
+const CHAOS_GIF_URLS = Object.entries(
+  import.meta.glob("../assets/*.gif", { eager: true, import: "default" })
+)
+  .filter(([path]) => /\/\d+\.gif$/i.test(path))
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([, url]) => url);
+
 // The cheat sheet for the UI
 const MORSE_CODE = {
   "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".",
@@ -37,6 +44,9 @@ const GameScreen = () => {
   const [level2HintIndex, setLevel2HintIndex] = useState(null);
   const [level3HintVisible, setLevel3HintVisible] = useState(false);
   const level3HintTimerRef = useRef(null);
+  const [level4HintGateOpen, setLevel4HintGateOpen] = useState(false);
+  const level4HintTimerRef = useRef(null);
+  const [chaosSprites, setChaosSprites] = useState(null);
   const usernameRef = useRef(
     (location?.state?.username || (() => {
       try {
@@ -199,24 +209,26 @@ const GameScreen = () => {
       return styled;
     }
 
+    const renderPerSlotScramble = () => (
+      <span className="inline-flex items-center justify-center gap-2">
+        {Array.from(styled).map((ch, idx) => (
+          <span
+            key={idx}
+            className={`inline-block w-[1.1ch] text-center transition-opacity duration-75 ${
+              level2HintIndex === idx
+                ? "opacity-100"
+                : "opacity-15 blur-[1px]"
+            }`}
+          >
+            {level2HintIndex === idx ? ch : "·"}
+          </span>
+        ))}
+      </span>
+    );
+
     if (gameState?.level === 2 && isCurrentTarget) {
       // Reveal one symbol at a time, but keep each symbol in its own position.
-      return (
-        <span className="inline-flex items-center justify-center gap-2">
-          {Array.from(styled).map((ch, idx) => (
-            <span
-              key={idx}
-              className={`inline-block w-[1.1ch] text-center transition-opacity duration-75 ${
-                level2HintIndex === idx
-                  ? "opacity-100"
-                  : "opacity-15 blur-[1px]"
-              }`}
-            >
-              {level2HintIndex === idx ? ch : "·"}
-            </span>
-          ))}
-        </span>
-      );
+      return renderPerSlotScramble();
     }
 
     if (gameState?.level === 3 && isCurrentTarget) {
@@ -224,6 +236,14 @@ const GameScreen = () => {
         return <span className="opacity-0 select-none">{styled}</span>;
       }
       return styled;
+    }
+
+    if (gameState?.level === 4 && isCurrentTarget) {
+      // Mix of level 2 + 3: scrambled, but only during a short gate window per letter.
+      if (!level4HintGateOpen) {
+        return <span className="opacity-0 select-none">{styled}</span>;
+      }
+      return renderPerSlotScramble();
     }
 
     return styled;
@@ -235,7 +255,12 @@ const GameScreen = () => {
   const isError = currentInput.length > 0 && !expectedMorse.startsWith(currentInput);
 
   useEffect(() => {
-    if (!isGameActive || reducedMotion || gameState?.level !== 2) {
+    const scrambleActive =
+      isGameActive &&
+      !reducedMotion &&
+      (gameState?.level === 2 || (gameState?.level === 4 && level4HintGateOpen));
+
+    if (!scrambleActive) {
       setLevel2HintIndex(null);
       return;
     }
@@ -289,7 +314,7 @@ const GameScreen = () => {
     return () => {
       cancelled = true;
     };
-  }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
+  }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter, level4HintGateOpen]);
 
   useEffect(() => {
     if (level3HintTimerRef.current) {
@@ -315,6 +340,78 @@ const GameScreen = () => {
       }
     };
   }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
+
+  useEffect(() => {
+    if (level4HintTimerRef.current) {
+      clearTimeout(level4HintTimerRef.current);
+      level4HintTimerRef.current = null;
+    }
+
+    if (!isGameActive || reducedMotion || gameState?.level !== 4 || !gameState?.targetLetter) {
+      setLevel4HintGateOpen(false);
+      return;
+    }
+
+    setLevel4HintGateOpen(true);
+    level4HintTimerRef.current = setTimeout(() => {
+      setLevel4HintGateOpen(false);
+      level4HintTimerRef.current = null;
+    }, 1400);
+
+    return () => {
+      if (level4HintTimerRef.current) {
+        clearTimeout(level4HintTimerRef.current);
+        level4HintTimerRef.current = null;
+      }
+    };
+  }, [isGameActive, reducedMotion, gameState?.level, gameState?.targetLetter]);
+
+  useEffect(() => {
+    if (!isGameActive || reducedMotion || gameState?.level !== 4) {
+      setChaosSprites(null);
+      return;
+    }
+
+    if (chaosSprites) return;
+
+    const sources =
+      CHAOS_GIF_URLS.length > 0
+        ? CHAOS_GIF_URLS
+        : Array.from({ length: 10 }, (_, i) => `/chaos/${i + 1}.gif`);
+    const cornerSlots = [
+      // top-left (3)
+      { left: "12px", top: "12px" },
+      { left: "86px", top: "22px" },
+      { left: "22px", top: "92px" },
+      // top-right (3)
+      { right: "12px", top: "12px" },
+      { right: "86px", top: "22px" },
+      { right: "22px", top: "92px" },
+      // bottom-left (3)
+      { left: "12px", bottom: "12px" },
+      { left: "86px", bottom: "22px" },
+      { left: "22px", bottom: "92px" },
+      // bottom-right (3)
+      { right: "12px", bottom: "12px" },
+      { right: "86px", bottom: "22px" },
+      { right: "22px", bottom: "92px" },
+    ];
+
+    setChaosSprites(Array.from({ length: cornerSlots.length }, (_, i) => {
+      const src = sources[i % sources.length];
+      const size = 64 + ((i % 3) * 10); // small variety, but stable
+      const floatDur = 1.8 + (i % 4) * 0.25; // 1.8..2.55
+      const delay = (i % 5) * 0.08;
+      return {
+        key: `${i}-${Date.now()}`,
+        src,
+        size,
+        ...cornerSlots[i],
+        floatDur,
+        delay,
+      };
+    }));
+  }, [isGameActive, reducedMotion, gameState?.level, chaosSprites]);
 
   // Trigger the 800ms flash when an error occurs
   useEffect(() => {
@@ -352,8 +449,35 @@ const GameScreen = () => {
   };
 
   return (
-    <div className="relative h-screen bg-[#0B1120] text-white overflow-hidden flex flex-col items-center [font-family:Oxanium,sans-serif]">
-      
+    <div className={`relative h-screen bg-[#0B1120] text-white overflow-hidden flex flex-col items-center [font-family:Oxanium,sans-serif] ${
+      gameState?.level === 4 && !reducedMotion ? "chaos-shake" : ""
+    }`}>
+      {gameState?.level === 4 && !reducedMotion && chaosSprites && (
+        <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
+          {chaosSprites.map((s) => (
+            <img
+              key={s.key}
+              src={s.src}
+              alt=""
+              className="chaos-corner-cat"
+              style={{
+                left: s.left,
+                right: s.right,
+                top: s.top,
+                bottom: s.bottom,
+                width: `${s.size}px`,
+                height: "auto",
+                animationDelay: `${s.delay}s`,
+                "--floatDur": `${s.floatDur}s`,
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ))}
+        </div>
+      )}
+	      
       <Webcam
         audio={false}
         ref={webcamRef}
@@ -362,9 +486,14 @@ const GameScreen = () => {
         className={`absolute object-cover transition-all duration-700 ease-in-out z-0 ${
           countdown > 0 
             ? "inset-0 w-full h-full opacity-30 pointer-events-none" 
-       
             : "top-4 left-1/2 -translate-x-1/2 w-40 h-30 rounded-2xl border-2 border-cyan-800 shadow-[0_0_20px_rgba(8,145,178,0.4)] z-50 opacity-100"
         }`} 
+        style={{
+          transform:
+            gameState?.level === 4 && countdown === 0
+              ? "rotate(180deg)"
+              : undefined,
+        }}
       />
 
       {gameOver && (

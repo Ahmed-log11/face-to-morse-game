@@ -178,3 +178,46 @@
     transform: none;
   }
 }
+
+@keyframes chaosShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, -1px) rotate(-0.2deg); }
+  20% { transform: translate(2px, 1px) rotate(0.2deg); }
+  30% { transform: translate(-3px, 2px) rotate(-0.3deg); }
+  40% { transform: translate(3px, -2px) rotate(0.3deg); }
+  50% { transform: translate(-2px, 2px) rotate(-0.2deg); }
+  60% { transform: translate(2px, -1px) rotate(0.2deg); }
+  70% { transform: translate(-1px, 1px) rotate(-0.1deg); }
+  80% { transform: translate(1px, -2px) rotate(0.1deg); }
+  90% { transform: translate(-1px, 0px) rotate(-0.1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.chaos-shake {
+  animation: chaosShake 220ms infinite;
+  transform-origin: center;
+}
+
+@keyframes chaosCatFloat {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; }
+  50% { transform: translate3d(0, -22px, 0) scale(1.06); opacity: 1; }
+  100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.9; }
+}
+
+.chaos-corner-cat {
+  position: absolute;
+  image-rendering: auto;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.18));
+  animation: chaosCatFloat var(--floatDur, 2.4s) ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chaos-shake {
+    animation: none;
+  }
+  .chaos-corner-cat {
+    animation: none;
+  }
+}

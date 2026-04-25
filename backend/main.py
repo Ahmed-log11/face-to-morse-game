@@ -111,6 +111,14 @@ async def add_signal(request: SignalRequest):
     """To be used by AI team to send detected signals to be added to
     the game state dictionray 
     """
+    # Enforce timer expiry and ignore signals after the game ends
+    was_active = game_state.is_active
+    game_state.get_time_left()
+    if not game_state.is_active:
+        if was_active:
+            await broadcast_state()
+        return {"message": "ignored (game ended)", "signal": request.signal, "gameState": game_state.get_state_dict()}
+
     game_state.add_signal(signal=request.signal)
     await broadcast_state()
     return {"message": "signal added", "signal": request.signal, "gameState": game_state.get_state_dict()}
@@ -121,6 +129,14 @@ async def process_frame(request: FrameRequest):
     """To be used by frontend to send raw webcam frames
        the backend runs the AI and updates the game state automatically
     """
+    # Enforce timer expiry and stop processing frames after game ends
+    was_active = game_state.is_active
+    game_state.get_time_left()
+    if not game_state.is_active:
+        if was_active:
+            await broadcast_state()
+        return {"signal": None, "ignored": True, "gameState": game_state.get_state_dict()}
+
     try:
         signal = detector.process(request.frame)
     except Exception as e:

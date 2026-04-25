@@ -82,6 +82,7 @@ const GameScreen = () => {
   );
 
   const [displayError, setDisplayError] = useState(false);
+
   useEffect(() => {
     fetch(`${BACKEND_URL}/reset-detector`);
   }, []);
@@ -145,21 +146,23 @@ const GameScreen = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (countdown === 0 && !isGameActive) {
-      setIsGameActive(true);
-      fetch(`${BACKEND_URL}/start-game`)
-        .then((res) => res.json())
-        .then((state) => {
-          setGameState(state);
-          gameStartedRef.current = true;
-        })
-        .catch((err) => console.error("Error starting game:", err));
-    }
-  }, [countdown, isGameActive]);
+	  useEffect(() => {
+	    if (countdown > 0) {
+	      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+	      return () => clearTimeout(timer);
+	    } else if (countdown === 0 && !isGameActive) {
+	      setIsGameActive(true);
+	      fetch(`${BACKEND_URL}/start-game`)
+	        .then((res) => res.json())
+	        .then((state) => {
+	          setGameState(state);
+	          gameStartedRef.current = true;
+	        })
+	        .catch((err) => {
+	          console.error("Error starting game:", err);
+	        });
+	    }
+	  }, [countdown, isGameActive]);
 
   useEffect(() => {
     if (!isGameActive) return;
@@ -465,36 +468,58 @@ const GameScreen = () => {
       CHAOS_GIF_URLS.length > 0
         ? CHAOS_GIF_URLS
         : Array.from({ length: 10 }, (_, i) => `/chaos/${i + 1}.gif`);
-    const cornerSlots = [
-      // top-left (3)
-      { left: "12px", top: "12px" },
-      { left: "86px", top: "22px" },
-      { left: "22px", top: "92px" },
-      // top-right (3)
-      { right: "12px", top: "12px" },
-      { right: "86px", top: "22px" },
-      { right: "22px", top: "92px" },
-      // bottom-left (3)
-      { left: "12px", bottom: "12px" },
-      { left: "86px", bottom: "22px" },
-      { left: "22px", bottom: "92px" },
-      // bottom-right (3)
-      { right: "12px", bottom: "12px" },
-      { right: "86px", bottom: "22px" },
-      { right: "22px", bottom: "92px" },
-    ];
+
+    const vw = window.innerWidth || 1200;
+    const vh = window.innerHeight || 800;
+    const minSide = Math.min(vw, vh);
+
+    // Place GIFs evenly around the edges, keeping the center clear for gameplay.
+    const margin = Math.max(16, Math.min(44, Math.round(minSide * 0.04)));
+    const baseSize = Math.max(64, Math.min(104, Math.round(minSide * 0.09)));
+
+    const topCount = 6;
+    const bottomCount = 6;
+    const sideCount = 4;
+
+    const slots = [];
+    const usableW = Math.max(1, vw - margin * 2);
+    const usableH = Math.max(1, vh - margin * 2);
+
+    for (let i = 0; i < topCount; i += 1) {
+      slots.push({
+        cx: Math.round(margin + (usableW * (i + 1)) / (topCount + 1)),
+        cy: margin,
+      });
+    }
+    for (let i = 0; i < bottomCount; i += 1) {
+      slots.push({
+        cx: Math.round(margin + (usableW * (i + 1)) / (bottomCount + 1)),
+        cy: vh - margin,
+      });
+    }
+    for (let i = 0; i < sideCount; i += 1) {
+      slots.push({
+        cx: margin,
+        cy: Math.round(margin + (usableH * (i + 1)) / (sideCount + 1)),
+      });
+      slots.push({
+        cx: vw - margin,
+        cy: Math.round(margin + (usableH * (i + 1)) / (sideCount + 1)),
+      });
+    }
 
     setChaosSprites(
-      Array.from({ length: cornerSlots.length }, (_, i) => {
+      slots.map((slot, i) => {
         const src = sources[i % sources.length];
-        const size = 64 + (i % 3) * 10; // small variety, but stable
-        const floatDur = 1.8 + (i % 4) * 0.25; // 1.8..2.55
-        const delay = (i % 5) * 0.08;
+        const size = baseSize - (i % 3) * 6;
+        const floatDur = 2.0 + (i % 4) * 0.25; // 2.0..2.75
+        const delay = (i % 5) * 0.06;
         return {
           key: `${i}-${Date.now()}`,
           src,
           size,
-          ...cornerSlots[i],
+          left: `${slot.cx - Math.round(size / 2)}px`,
+          top: `${slot.cy - Math.round(size / 2)}px`,
           floatDur,
           delay,
         };
@@ -555,9 +580,7 @@ const GameScreen = () => {
               className="chaos-corner-cat"
               style={{
                 left: s.left,
-                right: s.right,
                 top: s.top,
-                bottom: s.bottom,
                 width: `${s.size}px`,
                 height: "auto",
                 animationDelay: `${s.delay}s`,

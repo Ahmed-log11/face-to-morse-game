@@ -109,6 +109,15 @@ class GameState:
 
 
     def add_signal(self, signal):
+        # Don't accept input if game is not active or time is up
+        if not self.is_active:
+            return
+
+        # Enforce timer expiry even if no one is polling /state
+        self.get_time_left()
+        if not self.is_active:
+            return
+
         expected_morse = MORSE_DICT.get(self.target_letter, "")
         
         # 1.  If the previous sequence was wrong, clear it BEFORE adding the new blink

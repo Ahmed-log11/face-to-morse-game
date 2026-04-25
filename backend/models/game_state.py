@@ -7,10 +7,10 @@ class GameState:
     def __init__(self):
         self.max_level = 4
         self.level_time_limits = {
-            1: 120,  # level 1
+            1: 67,   # level 1 (67s)
             2: 60,   # level 2 (1 min)
-            3: 30,   # level 3 (30s)
-            4: 30,   # level 4 (30s)
+            3: 45,   # level 3 (45s)
+            4: 45,   # level 4 (45s)
         }
 
         # game progress

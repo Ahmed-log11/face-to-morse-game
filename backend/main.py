@@ -164,7 +164,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             if data == "ping":
-                await websocket.send_text(json.dumps({"type": "pong"}))
+                await websocket.send_text(json.dumps(game_state.get_state_dict()))
 
     except WebSocketDisconnect:
         pass

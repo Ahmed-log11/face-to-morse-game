@@ -535,8 +535,14 @@ const GameScreen = () => {
              </div>
           </div>
 
+          {/* Mobile controls hint — only visible on small portrait screens */}
+          <div className="flex md:hidden gap-6 text-xs font-bold text-gray-300 bg-gray-900/60 px-4 py-2 rounded-2xl border border-cyan-900/30 mb-2 mt-20">
+            <span>Right Wink <span className="text-green-400 text-base">•</span></span>
+            <span>Left Wink <span className="text-green-400 text-base">—</span></span>
+          </div>
+
           {/* Top HUD  */}
-          <div className="flex justify-between items-center w-full md:w-2/3 mb-6 bg-gray-900/60 p-4 rounded-[28px] border-2 border-cyan-900/30 shadow-lg mt-32">
+          <div className="flex justify-between items-center w-full md:w-2/3 mb-6 bg-gray-900/60 p-4 rounded-[28px] border-2 border-cyan-900/30 shadow-lg md:mt-32">
             <div className="text-center w-24 md:w-32">
               <p className="text-gray-400 text-xs md:text-sm uppercase tracking-widest mb-1 font-bold">Level</p>
               <p className="text-3xl md:text-4xl font-black text-cyan-400">{gameState?.level || 1}</p>
@@ -564,8 +570,8 @@ const GameScreen = () => {
 
                 return (
                   <div key={index} className="flex flex-col items-center">
-                     <span 
-                      className={`text-6xl md:text-8xl font-black uppercase transition-all duration-300 ${
+                     <span
+                      className={`text-4xl sm:text-6xl md:text-8xl font-black uppercase transition-all duration-300 ${
                         wordSuccessFlash
                           ? "text-green-400 scale-110 drop-shadow-[0_0_40px_rgba(74,222,128,1)] z-20"
                           : isCurrentTarget 
@@ -577,7 +583,7 @@ const GameScreen = () => {
                     </span>
                     
                     {/* The Morse Code Hint Dropdown */}
-                    <div className={`mt-2 text-xl md:text-2xl font-bold tracking-[0.2em] transition-all duration-300 ${
+                    <div className={`mt-2 text-base sm:text-xl md:text-2xl font-bold tracking-[0.2em] transition-all duration-300 ${
                       isCurrentTarget
                         ? (gameState?.level === 2
                             ? "text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)]"

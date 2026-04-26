@@ -81,7 +81,7 @@ const LeaderboardScreen = () => {
         ) : (
           <>
             {/* top section */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 w-full max-w-[95vw] md:max-w-5xl xl:max-w-6xl animate-game delay-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5 w-full max-w-[95vw] md:max-w-5xl xl:max-w-6xl animate-game delay-2">
               {/* Highest Score */}
               <div className="bg-slate-900/50 backdrop-blur-lg border border-cyan-300/20 rounded-3xl p-3 sm:p-4 md:p-5 shadow-[0_0_40px_rgba(34,211,238,0.1)] text-left hover:scale-[1.02] transition duration-300 min-w-0">
                 <h2 className="mb-2 sm:mb-3">

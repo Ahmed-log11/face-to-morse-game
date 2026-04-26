@@ -18,11 +18,11 @@ const Welcome = () => {
     }
   });
 
-  const handleMouseMove = (e) => {
+  const handleSlideMove = (clientX, currentTarget) => {
     if (!dragging) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    let x = e.clientX - rect.left;
+    const rect = currentTarget.getBoundingClientRect();
+    let x = clientX - rect.left;
 
     const sliderWidth = 56;
 
@@ -41,7 +41,19 @@ const Welcome = () => {
     }
   };
 
+  const handleMouseMove = (e) => handleSlideMove(e.clientX, e.currentTarget);
+
   const handleMouseUp = () => {
+    setDragging(false);
+    setPosition(0);
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+    handleSlideMove(e.touches[0].clientX, e.currentTarget);
+  };
+
+  const handleTouchEnd = () => {
     setDragging(false);
     setPosition(0);
   };
@@ -80,7 +92,7 @@ const Welcome = () => {
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 text-center gap-4 sm:gap-6">
         
         {/* title */}
-        <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-wide [font-family:Oxanium,sans-serif] animate-fadeUp delay-2 mt-8 sm:mt-10">
+        <h1 className="portrait-title text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-wide [font-family:Oxanium,sans-serif] animate-fadeUp delay-2 mt-8 sm:mt-10">
           Face to Morse
         </h1>
 
@@ -94,7 +106,7 @@ const Welcome = () => {
           <img
             src={eye}
             alt="Eye"
-            className="w-[300px] sm:w-[360px] md:w-[420px] opacity-85 drop-shadow-[0_0_25px_rgba(56,189,248,0.25)] animate-zoomIn delay-4"
+            className="portrait-eye w-[300px] sm:w-[360px] md:w-[420px] opacity-85 drop-shadow-[0_0_25px_rgba(56,189,248,0.25)] animate-zoomIn delay-4"
           />
         </div>
 
@@ -116,7 +128,9 @@ const Welcome = () => {
         <div
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          className={`mt-3 sm:mt-4 w-[260px] sm:w-[300px] md:w-[340px] h-12 sm:h-14 bg-slate-900/80 rounded-2xl relative flex items-center border overflow-hidden animate-fadeUp delay-5 ${
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className={`portrait-slider mt-3 sm:mt-4 w-[260px] sm:w-[300px] md:w-[340px] h-12 sm:h-14 bg-slate-900/80 rounded-2xl relative flex items-center border overflow-hidden animate-fadeUp delay-5 ${
             username.trim().length >= 2 ? "border-cyan-300/20" : "border-red-400/30"
           }`}
         >
@@ -126,6 +140,9 @@ const Welcome = () => {
 
           <div
             onMouseDown={() => {
+              if (username.trim().length >= 2) setDragging(true);
+            }}
+            onTouchStart={() => {
               if (username.trim().length >= 2) setDragging(true);
             }}
             style={{ transform: `translateX(${position}px)` }}
